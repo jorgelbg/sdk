@@ -91,12 +91,17 @@ type (
 		AllValue    string   `json:"allValue"`
 		Multi       bool     `json:"multi"`
 		MultiFormat string   `json:"multiFormat"`
-		Query       string   `json:"query"`
+		Query       Query    `json:"query"`
 		Regex       string   `json:"regex"`
 		Current     Current  `json:"current"`
 		Label       string   `json:"label"`
 		Hide        uint8    `json:"hide"`
 		Sort        int      `json:"sort"`
+	}
+	// for templateVar
+	Query struct {
+		Query string `json:"query"`
+		RefId string `json:"refId"`
 	}
 	// for templateVar
 	Option struct {
@@ -150,6 +155,33 @@ type (
 // Height of rows maybe passed as number (ex 200) or
 // as string (ex "200px") or empty string
 type Height string
+
+func (q *Query) UnmarshalJSON(buf []byte) error {
+	var objmap map[string]string
+	if err := json.Unmarshal(buf, &objmap); err != nil {
+		// cannot be un-marshaled into a generic map, it must be a string
+		q.Query = string(buf)
+	} else {
+		q.Query = objmap["query"]
+		q.RefId = objmap["refId"]
+	}
+
+	return nil
+}
+
+type AsQuery Query
+
+func (q *Query) MarshalJSON() ([]byte, error) {
+	if q.RefId != "" {
+		return json.Marshal(&struct {
+			*AsQuery
+		}{
+			AsQuery: (*AsQuery)(q),
+		})
+	}
+
+	return []byte(q.Query), nil
+}
 
 func (h *Height) UnmarshalJSON(raw []byte) error {
 	if raw == nil || bytes.Equal(raw, []byte(`"null"`)) {
