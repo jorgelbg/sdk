@@ -19,6 +19,20 @@ package sdk
    ॐ तारे तुत्तारे तुरे स्व
 */
 
+import "time"
+
+// PermissionLevel is a type for representing the permission levels for the permission field
+type PermissionLevel int
+
+// Permissions levels as described in the doc:
+// https://grafana.com/docs/grafana/latest/http_api/folder_permissions/#folder-permissions-api
+const (
+	View PermissionLevel = iota + 1
+	Edit
+	_
+	Admin
+)
+
 // Folder as described in the doc
 // https://grafana.com/docs/grafana/latest/http_api/folder/#get-all-folders
 type Folder struct {
@@ -36,4 +50,54 @@ type Folder struct {
 	Updated   string `json:"updated"`
 	Version   int    `json:"version"`
 	Overwrite bool   `json:"overwrite"`
+}
+
+// FolderPermission as described in the doc
+// https://grafana.com/docs/grafana/latest/http_api/folder_permissions/
+type FolderPermission struct {
+	ID             int             `json:"ID"`
+	FolderID       int             `json:"folderId"`
+	Created        time.Time       `json:"created"`
+	Updated        time.Time       `json:"updated"`
+	UserID         int             `json:"userId"`
+	UserLogin      string          `json:"userLogin"`
+	UserEmail      string          `json:"userEmail"`
+	UserAvatarURL  string          `json:"userAvatarUrl"`
+	TeamID         int             `json:"teamId"`
+	TeamEmail      string          `json:"teamEmail"`
+	TeamAvatarURL  string          `json:"teamAvatarUrl"`
+	Team           string          `json:"team"`
+	Role           string          `json:"role"`
+	Permission     PermissionLevel `json:"permission"`
+	PermissionName string          `json:"permissionName"`
+	UID            string          `json:"uid"`
+	Title          string          `json:"title"`
+	Slug           string          `json:"slug"`
+	IsFolder       bool            `json:"isFolder"`
+	URL            string          `json:"url"`
+	Inherited      bool            `json:"inherited"`
+}
+
+// FolderPermissionItem as described in the doc
+// https://grafana.com/docs/grafana/latest/http_api/folder_permissions/
+//
+// Each item has a pair of [Role|TeamID|UserID] and Permission.
+// unnecessary fields are omitted.
+type FolderPermissionItem struct {
+	Role       string          `json:"role,omitempty"`
+	TeamID     int             `json:"teamId,omitempty"`
+	UserID     int             `json:"userId,omitempty"`
+	Permission PermissionLevel `json:"permission,omitempty"`
+}
+
+// DefaultRolesFolderPermissions represents the default role permissions for a given folder
+// Viewer has View permissions
+// Editor has Edit permissions
+var DefaultRolesFolderPermissions = []FolderPermissionItem{
+	{Role: UserViewer, Permission: View},
+	{Role: UserEditor, Permission: Edit},
+}
+
+type FolderPermissionList struct {
+	Items []FolderPermissionItem `json:"items"`
 }

@@ -165,3 +165,49 @@ func Limit(limit uint) GetFolderParams {
 		v.Set("limit", strconv.FormatUint(uint64(limit), 10))
 	}
 }
+
+// GetFolderPermissions gets the permissions for a folder by UID
+// Reflects https://grafana.com/docs/grafana/latest/http_api/folder_permissions/
+func (r *Client) GetFolderPermissions(ctx context.Context, UID string) ([]FolderPermission, error) {
+	var (
+		raw         []byte
+		code        int
+		err         error
+		permissions []FolderPermission
+	)
+	if raw, code, err = r.get(ctx, fmt.Sprintf("api/folders/%s/permissions", UID), nil); err != nil {
+		return []FolderPermission{}, err
+	}
+	if code != 200 {
+		return []FolderPermission{}, fmt.Errorf("HTTP error %d: returns %s", code, raw)
+	}
+
+	err = json.Unmarshal(raw, &permissions)
+	return permissions, err
+}
+
+func (r *Client) UpdateFolderPermissions(ctx context.Context, UID string, items []FolderPermissionItem) (StatusMessage, error) {
+	var (
+		raw  []byte
+		resp StatusMessage
+		code int
+		err  error
+	)
+
+	list := FolderPermissionList{
+		Items: items,
+	}
+	if raw, err = json.Marshal(list); err != nil {
+		return StatusMessage{}, err
+	}
+	if raw, code, err = r.post(ctx, fmt.Sprintf("api/folders/%s/permissions", UID), nil, raw); err != nil {
+		return StatusMessage{}, err
+	}
+	if err = json.Unmarshal(raw, &resp); err != nil {
+		return StatusMessage{}, err
+	}
+	if code != 200 {
+		return resp, fmt.Errorf("HTTP error %d: returns %s", code, *resp.Message)
+	}
+	return resp, nil
+}

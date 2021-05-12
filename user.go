@@ -45,3 +45,11 @@ type PageUsers struct {
 	Page       int    `json:"page"`
 	PerPage    int    `json:"perPage"`
 }
+
+// User roles constants as described in the docs
+// https://grafana.com/docs/grafana/latest/permissions/organization_roles/
+const (
+	UserViewer string = "Viewer"
+	UserEditor string = "Editor"
+	UserAdmin  string = "Admin"
+)
