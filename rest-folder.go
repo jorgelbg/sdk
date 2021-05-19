@@ -211,3 +211,20 @@ func (r *Client) UpdateFolderPermissions(ctx context.Context, UID string, items 
 	}
 	return resp, nil
 }
+
+// ToItem returns the equivalent FolderPermissionItem from the existing FolderPermission
+func (p FolderPermission) ToItem() FolderPermissionItem {
+	item := FolderPermissionItem{
+		Permission: p.Permission,
+	}
+
+	if p.UserID != 0 {
+		item.UserID = p.UserID
+	} else if p.TeamID != 0 {
+		item.TeamID = p.TeamID
+	} else if p.Role != "" {
+		item.Role = p.Role
+	}
+
+	return item
+}
