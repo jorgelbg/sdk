@@ -233,3 +233,38 @@ func (v *StringSliceString) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(v.Value)
 }
+
+type ValueOrQuery struct {
+	Value string `json:"-"`
+	Query string `json:"query"`
+	RefId string `json:"refId"`
+}
+
+func (q *ValueOrQuery) UnmarshalJSON(buf []byte) error {
+	var objmap map[string]string
+	if err := json.Unmarshal(buf, &objmap); err != nil {
+		// cannot be un-marshaled into a generic map, it must be a string
+		q.Value = string(buf)
+	} else {
+		q.Query = objmap["query"]
+		q.RefId = objmap["refId"]
+	}
+
+	return nil
+}
+
+// asQuery is an alias to the original ValueOrQuery type. It is used in the MarshalJSON to avoid
+// doing a manual serialization of all the fields to an anonymous struct.
+type asQuery ValueOrQuery
+
+func (q *ValueOrQuery) MarshalJSON() ([]byte, error) {
+	if q.Value == "" {
+		return json.Marshal(&struct {
+			*asQuery
+		}{
+			asQuery: (*asQuery)(q),
+		})
+	}
+
+	return []byte(q.Value), nil
+}
